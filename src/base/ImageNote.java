@@ -2,8 +2,8 @@ package base;
 
 public class ImageNote extends Note {
 
-	public ImageNote() {
-		// TODO Auto-generated constructor stub
+	public ImageNote(String title) {
+		super(title);
 	}
 
 }
