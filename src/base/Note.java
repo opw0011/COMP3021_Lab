@@ -2,13 +2,18 @@ package base;
 
 import java.util.Date;
 
-public class Note {
+public class Note implements Comparable<Note>{
 	private Date date;
 	private String title;
 	
 	public Note(String title){
 		this.title = title;
 		date = new Date();
+	}
+
+	@Override
+	public String toString() {
+		return date.toString() + "\t" + title;
 	}
 
 	public String getTitle() {
@@ -38,6 +43,16 @@ public class Note {
 		} else if (!title.equals(other.title))
 			return false;
 		return true;
+	}
+
+	@Override
+	public int compareTo(Note o) {
+		return -this.date.compareTo(o.date);
+	}
+	
+	// case insensitive
+	public boolean containsKeyword(String keyword) {
+		return title.toUpperCase().contains(keyword.toUpperCase());
 	}
 
 }
