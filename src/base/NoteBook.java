@@ -111,5 +111,28 @@ public class NoteBook implements Serializable{
 		return true;
 	}
 	
+	/**
+	 * Get Folder by the folder name
+	 * @param title folder's title
+	 * @return Folder if found; otherwise return null
+	 */
+	public Folder getFolder(String title) {
+		Folder matchedFolder = null;
+		for(Folder folder: folders) {
+			// if same folder name is matched
+			if(folder.getName().equals(title)) {
+				matchedFolder = folder;
+				break;
+			}
+		}
+		return matchedFolder;
+	}
+	
+	public void addFolder(String folderName) {
+		if(folderName != null) {
+			folders.add(new Folder(folderName));
+		}
+	}
+	
 	
 }

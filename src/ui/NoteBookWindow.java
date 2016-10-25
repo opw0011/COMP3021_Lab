@@ -3,6 +3,7 @@ package ui;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import base.Folder;
 import base.Note;
@@ -27,6 +28,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -224,6 +226,70 @@ public class NoteBookWindow extends Application {
 		vbox.setPadding(new Insets(10)); // Set all sides to 10
 		vbox.setSpacing(8); // Gap between nodes
 		
+		// Add Folder Button
+		Button buttonAddFolder = new Button("Add a Folder");
+		buttonAddFolder.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				// Show a input dialog to let user enter new folder name
+				TextInputDialog dialog = new TextInputDialog("Add a Folder");
+				dialog.setTitle("Input");
+				dialog.setHeaderText("Add a new folder for your notebook:");
+				dialog.setContentText("Please enter the name you want to create:");
+				
+				// Traditional way to get the response value.
+				Optional<String> result = dialog.showAndWait();
+
+				// break if no value found
+				if (! result.isPresent()) {
+					return;
+				}
+				
+				String newFolderName = result.get();
+				
+				// if folder name is empty
+				if(newFolderName.trim().length() == 0) {
+					// show warning message
+					Alert alert = new Alert(AlertType.WARNING);
+					alert.setTitle("Warning");
+					alert.setContentText("Please input an valid folder name");
+					alert.showAndWait().ifPresent(rs -> {
+						if (rs == ButtonType.OK) {
+							System.out.println("Pressed OK.");
+						}
+					});
+				}
+				// if folder with the same name is found
+				else if (noteBook.getFolder(newFolderName) != null){
+					// show warning message
+					Alert alert = new Alert(AlertType.WARNING);
+					alert.setTitle("Warning");
+					alert.setContentText(String.format("You already have a folder name with '%s'", newFolderName));
+					alert.showAndWait().ifPresent(rs -> {
+						if (rs == ButtonType.OK) {
+							System.out.println("Pressed OK.");
+						}
+					});
+				}
+				// if input is valid, create the new folder
+				else {
+					System.out.printf("New folder : %s is added! \n", newFolderName);
+					// create the new folder
+					noteBook.addFolder(newFolderName);
+					updateFolderListView();
+					foldersComboBox.setValue(newFolderName);	// make the new folder selected
+				}
+				
+			}			
+		});
+		buttonAddFolder.setPrefSize(100, 20);
+		
+		HBox innerhbox = new HBox();
+		innerhbox.setPadding(new Insets(0, 0, 10, 0));
+		innerhbox.setSpacing(8);
+		innerhbox.getChildren().add(foldersComboBox);
+		innerhbox.getChildren().add(buttonAddFolder);
+		
 		
 //		foldersComboBox.getItems().addAll("FOLDER NAME 1", "FOLDER NAME 2", "FOLDER NAME 3");
 		// load folder names
@@ -274,10 +340,22 @@ public class NoteBookWindow extends Application {
 
 			}
 		});
+		
+		// Add Note Button
+		Button buttonAddNote = new Button("Add a Note");
+		buttonAddNote.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				System.out.println("Add a Note");
+			}			
+		});
+		buttonAddNote.setPrefSize(100, 20);
+		
 		vbox.getChildren().add(new Label("Choose folder: "));
-		vbox.getChildren().add(foldersComboBox);
+		vbox.getChildren().add(innerhbox);
 		vbox.getChildren().add(new Label("Choose note title"));
 		vbox.getChildren().add(titleslistView);
+		vbox.getChildren().add(buttonAddNote);
 
 		return vbox;
 	}
