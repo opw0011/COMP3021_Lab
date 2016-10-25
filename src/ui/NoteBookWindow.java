@@ -275,7 +275,7 @@ public class NoteBookWindow extends Application {
 					System.out.printf("New folder : %s is added! \n", newFolderName);
 					// create the new folder
 					noteBook.addFolder(newFolderName);
-					updateFolderListView();
+					updateFolderListView(DEFAULT_SELECTED_FOLDER);
 					foldersComboBox.setValue(newFolderName);	// make the new folder selected
 				}
 				
@@ -292,7 +292,7 @@ public class NoteBookWindow extends Application {
 		
 //		foldersComboBox.getItems().addAll("FOLDER NAME 1", "FOLDER NAME 2", "FOLDER NAME 3");
 		// load folder names
-		updateFolderListView();
+		updateFolderListView(DEFAULT_SELECTED_FOLDER);
 
 		foldersComboBox.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Object>() {
 			@Override
@@ -300,6 +300,7 @@ public class NoteBookWindow extends Application {
 				if(t1 == null) return;	// to prevent null pointer exception when the list are clear
 				currentFolder = t1.toString();	// this contains the name of the folder selected
 				// TODO update listview
+				System.out.println(currentFolder);
 				updateListView(noteBook.getFolder(currentFolder).getNotes());				
 //				for(Folder folder : noteBook.getFolders()) {
 //					// get the current folder
@@ -430,17 +431,21 @@ public class NoteBookWindow extends Application {
 	}
 
 	/**
-	 * Update the folders list shown on the drop-down menu
+	 * Update the folders list shown on the drop-down menu, set selectedFolder after update
 	 */
-	private void updateFolderListView() {
+	private void updateFolderListView(String selectedFolder) {
 		foldersComboBox.getItems().clear();
 		ArrayList<Folder> folders = this.noteBook.getFolders();
 		for(Folder folder : folders) {
 			String name = folder.getName();
 			foldersComboBox.getItems().add(name);
 		}
-		foldersComboBox.setValue(DEFAULT_SELECTED_FOLDER);	// set current selected item to nil
-		updateListView(new ArrayList<Note>());	// clear all the item in the list view
+//		foldersComboBox.setValue(DEFAULT_SELECTED_FOLDER);	// set current selected item to nil
+		foldersComboBox.setValue(selectedFolder);
+		if(selectedFolder == DEFAULT_SELECTED_FOLDER)
+			updateListView(new ArrayList<Note>());	// clear all the item in the list view
+		else
+			updateListView(noteBook.getFolder(currentFolder).getNotes());
 	}
 
 	/**
@@ -512,6 +517,31 @@ public class NoteBookWindow extends Application {
 		
 		Button buttonDeleteNote = new Button("Delete Note");
 		buttonDeleteNote.setPrefSize(100, 20);
+		buttonDeleteNote.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				// show warning message if either folder or note is not selected
+				if(currentFolder == DEFAULT_SELECTED_FOLDER || currentNote.isEmpty()) {
+					Alert alert = new Alert(AlertType.WARNING);
+					alert.setTitle("Warning");
+					alert.setContentText(String.format("Please select a folder and a note"));
+					alert.showAndWait().ifPresent(rs -> {
+						if (rs == ButtonType.OK) {
+							System.out.println("Pressed OK.");
+						}
+					});	
+				}
+				else {
+					// TODO: confirm before delete
+					
+					String newNoteContent = textAreaNote.getText();
+					System.out.println("Deleting note " + newNoteContent);
+					
+					noteBook.getFolder(currentFolder).removeNote(currentNote); // TODO: Handler error when it return false
+					updateFolderListView(currentFolder);
+				}
+			}			
+		});
 		
 		HBox hbox = new HBox();
 		hbox.setSpacing(8);
@@ -571,7 +601,7 @@ public class NoteBookWindow extends Application {
 //		System.out.println(path);
 		noteBook = new NoteBook(path);
 //		System.out.println(noteBook.getFolders());	
-		updateFolderListView();
+		updateFolderListView(DEFAULT_SELECTED_FOLDER);
 		
 	}
 

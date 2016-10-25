@@ -10,6 +10,7 @@ import java.util.Set;
 public class Folder implements Comparable<Folder>, Serializable{
 	private ArrayList<Note> notes;
 	private String name;
+	private static final long serialVersionUID = 1L;
 	
 	public Folder(String name) {
 		this.name = name;
@@ -157,6 +158,21 @@ public class Folder implements Comparable<Folder>, Serializable{
 			}
 		}
 		return matchedNote;
+	}
+	
+	/**
+	 * Remove the note from the folder
+	 * @param title
+	 * @return
+	 */
+	public boolean removeNote(String title) {
+		Note noteToBeRemoved = getNote(title);
+		if(noteToBeRemoved != null) {
+			notes.remove(noteToBeRemoved);
+			return true;
+		}
+		return false;
+		
 	}
 
 }
