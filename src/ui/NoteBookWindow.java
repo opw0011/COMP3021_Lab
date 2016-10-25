@@ -17,7 +17,10 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
@@ -108,8 +111,8 @@ public class NoteBookWindow extends Application {
 		hbox.setPadding(new Insets(15, 12, 15, 12));
 		hbox.setSpacing(10); // Gap between nodes
 
+		// Load Button
 		Button buttonLoad = new Button("Load");
-		// When the button "Load" is clicked
 		buttonLoad.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
@@ -128,16 +131,34 @@ public class NoteBookWindow extends Application {
 		});
 		buttonLoad.setPrefSize(100, 20);
 
+		// Save Button
 		Button buttonSave = new Button("Save");
 		buttonSave.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
-				// TODO Auto-generated method stub	
-				System.out.println("Save btn is clicked");
+				// select file to be saved
+				FileChooser fileChooser = new FileChooser();
+				fileChooser.setTitle("Please choose a file which you want to save to!");
+				
+				FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Serialized Object File (*.ser)", "*.ser");
+				fileChooser.getExtensionFilters().add(extFilter);
+				
+				File file = fileChooser.showOpenDialog(stage);
+				
+				if(file != null && noteBook.save(file.getPath())) {
+					// show alert box
+					Alert alert = new Alert(AlertType.INFORMATION);
+					alert.setTitle("Successfully saved");
+					alert.setContentText("You file has been saved to file " + file.getName());
+					alert.showAndWait().ifPresent(rs -> {
+						if (rs == ButtonType.OK) {
+							System.out.println("Pressed OK.");
+						}
+					});
+				}
 			}			
 		});
 		buttonSave.setPrefSize(100, 20);
-		buttonSave.setDisable(true);
 		
 		Label searchLable = new Label("Search : ");
 		searchLable.setPrefSize(50, 20);
