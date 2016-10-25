@@ -1,5 +1,6 @@
 package ui;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +29,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 /**
@@ -68,6 +70,10 @@ public class NoteBookWindow extends Application {
 	 * current search string
 	 */
 	String currentSearch = "";
+	/**
+	 * current stage
+	 */
+	Stage stage;
 
 	public static void main(String[] args) {
 		launch(NoteBookWindow.class, args);
@@ -87,6 +93,8 @@ public class NoteBookWindow extends Application {
 		stage.setScene(scene);
 		stage.setTitle("NoteBook COMP 3021");
 		stage.show();
+		
+		this.stage = stage;
 	}
 
 	/**
@@ -101,15 +109,24 @@ public class NoteBookWindow extends Application {
 		hbox.setSpacing(10); // Gap between nodes
 
 		Button buttonLoad = new Button("Load");
-		buttonLoad.setPrefSize(100, 20);
-//		buttonLoad.setDisable(true);
+		// When the button "Load" is clicked
 		buttonLoad.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
-				// TODO Auto-generated method stub	
-				System.out.println("Save btn is clicked");
+				// load file
+				FileChooser fileChooser = new FileChooser();
+				fileChooser.setTitle("Please choose a file which contains a Notebook object!");
+				
+				FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("Serialized Object File (*.ser)", "*.ser");
+				fileChooser.getExtensionFilters().add(extFilter);
+				 	
+				File file = fileChooser.showOpenDialog(stage);	// ensure the window(stage) is blocked/locked by the pop-up windows
+				if(file != null) {
+					loadNoteBook(file);						
+				}
 			}			
 		});
+		buttonLoad.setPrefSize(100, 20);
 
 		Button buttonSave = new Button("Save");
 		buttonSave.setOnAction(new EventHandler<ActionEvent>() {
@@ -121,10 +138,13 @@ public class NoteBookWindow extends Application {
 		});
 		buttonSave.setPrefSize(100, 20);
 		buttonSave.setDisable(true);
+		
 		Label searchLable = new Label("Search : ");
 		searchLable.setPrefSize(50, 20);
+		
 		TextField textSearch = new TextField();
 		textSearch.setPrefSize(200, 20);
+		
 		Button buttonSearch= new Button("Search");
 		buttonSearch.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
@@ -144,6 +164,7 @@ public class NoteBookWindow extends Application {
 			}			
 		});
 		buttonSearch.setPrefSize(100, 20);
+		
 		Button buttonClearSearch = new Button("Clear Search");
 		buttonClearSearch.setPrefSize(100, 20);
 		buttonClearSearch.setOnAction(new EventHandler<ActionEvent>() {
@@ -185,17 +206,13 @@ public class NoteBookWindow extends Application {
 		
 //		foldersComboBox.getItems().addAll("FOLDER NAME 1", "FOLDER NAME 2", "FOLDER NAME 3");
 		// load folder names
-		ArrayList<Folder> folders = this.noteBook.getFolders();
-		for(Folder folder : folders) {
-			String name = folder.getName();
-			foldersComboBox.getItems().add(name);
-		}
+		updateFolderListView();
 
 		foldersComboBox.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Object>() {
 			@Override
 			public void changed(ObservableValue ov, Object t, Object t1) {
-				currentFolder = t1.toString();
-				// this contains the name of the folder selected
+				if(t1 == null) return;	// to prevent null pointer exception when the list are clear
+				currentFolder = t1.toString();	// this contains the name of the folder selected
 				// TODO update listview
 				for(Folder folder : noteBook.getFolders()) {
 					// get the current folder
@@ -207,8 +224,6 @@ public class NoteBookWindow extends Application {
 			}
 
 		});
-
-		foldersComboBox.setValue("-----");
 
 		titleslistView.setPrefHeight(100);
 
@@ -246,21 +261,25 @@ public class NoteBookWindow extends Application {
 		return vbox;
 	}
 
+	/**
+	 * Update the folders list shown on the drop-down menu
+	 */
+	private void updateFolderListView() {
+		foldersComboBox.getItems().clear();
+		ArrayList<Folder> folders = this.noteBook.getFolders();
+		for(Folder folder : folders) {
+			String name = folder.getName();
+			foldersComboBox.getItems().add(name);
+		}
+		foldersComboBox.setValue("-----");	// set current selected item to nil
+		updateListView(new ArrayList<Note>());	// clear all the item in the list view
+	}
+
 	private void updateListView(List<Note> notes) {
 		ArrayList<String> list = new ArrayList<String>();
 
 		// TODO populate the list object with all the TextNote titles of the
 		// currentFolder
-//		for(Folder folder : this.noteBook.getFolders()) {
-//			// get the current folder
-//			if(folder.getName().equals(currentFolder)) {
-//				// get all the note titles
-//				for(Note note : folder.getNotes()) {
-//					list.add(note.getTitle());
-//				}
-//				break;
-//			}			
-//		}
 		for(Note note : notes) {
 			list.add(note.getTitle());
 		}
@@ -308,6 +327,15 @@ public class NoteBookWindow extends Application {
 		nb.createTextNote("Holiday", "Christmas", "Possible destinations : Home, New York or Rome");
 		noteBook = nb;
 
+	}
+	
+	private void loadNoteBook(File file) {
+		String path = file.getPath();
+//		System.out.println(path);
+		noteBook = new NoteBook(path);
+//		System.out.println(noteBook.getFolders());	
+		updateFolderListView();
+		
 	}
 
 }
