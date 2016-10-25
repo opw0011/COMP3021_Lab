@@ -143,5 +143,20 @@ public class Folder implements Comparable<Folder>, Serializable{
 		
 		return matchedNotes;
 	}
+	
+	/**
+	 * Get the note by the title
+	 * @param title note's title
+	 * @return Note if found, otherwise return null
+	 */
+	public Note getNote(String title) {
+		Note matchedNote = null;		
+		for(Note note : notes) {
+			if(note.getTitle().equals(title)) {
+				matchedNote = note;
+			}
+		}
+		return matchedNote;
+	}
 
 }

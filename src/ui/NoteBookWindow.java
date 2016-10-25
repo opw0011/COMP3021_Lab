@@ -29,6 +29,8 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -48,7 +50,10 @@ import javafx.stage.Stage;
  *
  */
 public class NoteBookWindow extends Application {
-
+	/**
+	 * Default selected folder name in list view
+	 */
+	private static final String DEFAULT_SELECTED_FOLDER = "-----";
 	/**
 	 * TextArea containing the note
 	 */
@@ -75,6 +80,10 @@ public class NoteBookWindow extends Application {
 	 * current search string
 	 */
 	String currentSearch = "";
+	/**
+	 * current note selected by user
+	 */
+	String currentNote= "";
 	/**
 	 * current stage
 	 */
@@ -232,23 +241,13 @@ public class NoteBookWindow extends Application {
 			@Override
 			public void handle(ActionEvent event) {
 				// Show a input dialog to let user enter new folder name
-				TextInputDialog dialog = new TextInputDialog("Add a Folder");
-				dialog.setTitle("Input");
-				dialog.setHeaderText("Add a new folder for your notebook:");
-				dialog.setContentText("Please enter the name you want to create:");
-				
-				// Traditional way to get the response value.
-				Optional<String> result = dialog.showAndWait();
-
-				// break if no value found
-				if (! result.isPresent()) {
-					return;
-				}
-				
-				String newFolderName = result.get();
+				String newFolderName = getStringFromInputDialog("Input", 
+						"Add a new folder for your notebook:", 
+						"Please enter the name you want to create:", 
+						"Add a Folder");
 				
 				// if folder name is empty
-				if(newFolderName.trim().length() == 0) {
+				if(newFolderName == null || newFolderName.trim().length() == 0) {
 					// show warning message
 					Alert alert = new Alert(AlertType.WARNING);
 					alert.setTitle("Warning");
@@ -301,13 +300,14 @@ public class NoteBookWindow extends Application {
 				if(t1 == null) return;	// to prevent null pointer exception when the list are clear
 				currentFolder = t1.toString();	// this contains the name of the folder selected
 				// TODO update listview
-				for(Folder folder : noteBook.getFolders()) {
-					// get the current folder
-					if(folder.getName().equals(currentFolder)) {
-						updateListView(folder.getNotes());
-						break;
-					}			
-				}			
+				updateListView(noteBook.getFolder(currentFolder).getNotes());				
+//				for(Folder folder : noteBook.getFolders()) {
+//					// get the current folder
+//					if(folder.getName().equals(currentFolder)) {
+//						updateListView(folder.getNotes());
+//						break;
+//					}			
+//				}			
 			}
 
 		});
@@ -323,20 +323,30 @@ public class NoteBookWindow extends Application {
 				// This is the selected title
 				// TODO load the content of the selected note in
 				// textAreNote
+				currentNote = title;	// set the member variable of current Note
 				String content = "";
-				for(Folder folder : noteBook.getFolders()) {
-					// get the current folder
-					if(folder.getName().equals(currentFolder)) {
-						// get all the note titles
-						for(Note note : folder.getNotes()) {
-							if(note instanceof TextNote && note.getTitle().equals(title)) {
-								content = ((TextNote) note).getContent();
-							}
-						}
-						break;
-					}			
+				
+				ArrayList<Note> notes = noteBook.getFolder(currentFolder).getNotes();
+				for(Note note : notes) {
+					if(note instanceof TextNote && note.getTitle().equals(currentNote)) {
+						content = ((TextNote) note).getContent();
+					}
 				}
 				textAreaNote.setText(content);
+				
+//				for(Folder folder : noteBook.getFolders()) {
+//					// get the current folder
+//					if(folder.getName().equals(currentFolder)) {
+//						// get all the note titles
+//						for(Note note : folder.getNotes()) {
+//							if(note instanceof TextNote && note.getTitle().equals(title)) {
+//								content = ((TextNote) note).getContent();
+//							}
+//						}
+//						break;
+//					}			
+//				}
+//				textAreaNote.setText(content);
 
 			}
 		});
@@ -346,7 +356,66 @@ public class NoteBookWindow extends Application {
 		buttonAddNote.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
-				System.out.println("Add a Note");
+//				System.out.println("Add a Note");
+				String selectedFolderName = foldersComboBox.getSelectionModel().getSelectedItem();
+				
+				// if folder not selected
+				if(selectedFolderName.equals(DEFAULT_SELECTED_FOLDER)) {
+					// show warning message
+					Alert alert = new Alert(AlertType.WARNING);
+					alert.setTitle("Warning");
+					alert.setContentText(String.format("Please choose a folder first!"));
+					alert.showAndWait().ifPresent(rs -> {
+						if (rs == ButtonType.OK) {
+							System.out.println("Pressed OK.");
+						}
+					});
+					return;
+				}
+				// folder is selected
+				else {
+					// show a dialog to input note title
+					TextInputDialog dialog = new TextInputDialog("Add a Note");
+					dialog.setTitle("Input");
+					dialog.setHeaderText("Add a new note to current folder");
+					dialog.setContentText("Please enter the name of your note: ");
+					// Traditional way to get the response value.
+					Optional<String> result = dialog.showAndWait();
+					// break if no value found
+					if (! result.isPresent()) {
+						return;
+					}
+					String newNoteTitle = result.get();
+					if(newNoteTitle.trim().length() == 0) {
+						// show warning message
+						Alert alert = new Alert(AlertType.WARNING);
+						alert.setTitle("Warning");
+						alert.setContentText(String.format("Note name cannot be empty"));
+						alert.showAndWait().ifPresent(rs -> {
+							if (rs == ButtonType.OK) {
+								System.out.println("Pressed OK.");
+							}
+						});
+					}
+					else {
+						// add a new note with the title
+						noteBook.createTextNote(selectedFolderName, newNoteTitle);
+						
+						// show success message 
+						Alert alert = new Alert(AlertType.INFORMATION);
+						alert.setTitle("Successful");
+						alert.setContentText(String.format("Insert note '%s' to folder '%s' successfully!", 
+								newNoteTitle, selectedFolderName));
+						alert.showAndWait().ifPresent(rs -> {
+							if (rs == ButtonType.OK) {
+								System.out.println("Pressed OK.");
+							}
+						});
+						
+						// update the list view
+						updateListView(noteBook.getFolder(selectedFolderName).getNotes());
+					}
+				}
 			}			
 		});
 		buttonAddNote.setPrefSize(100, 20);
@@ -370,21 +439,23 @@ public class NoteBookWindow extends Application {
 			String name = folder.getName();
 			foldersComboBox.getItems().add(name);
 		}
-		foldersComboBox.setValue("-----");	// set current selected item to nil
+		foldersComboBox.setValue(DEFAULT_SELECTED_FOLDER);	// set current selected item to nil
 		updateListView(new ArrayList<Note>());	// clear all the item in the list view
 	}
 
+	/**
+	 * populate the list object with all the TextNote titles of the currentFolder
+	 * @param notes
+	 */
 	private void updateListView(List<Note> notes) {
 		ArrayList<String> list = new ArrayList<String>();
-
-		// TODO populate the list object with all the TextNote titles of the
-		// currentFolder
 		for(Note note : notes) {
 			list.add(note.getTitle());
 		}
 		ObservableList<String> combox2 = FXCollections.observableArrayList(list);
 		titleslistView.setItems(combox2);
 		textAreaNote.setText("");
+		currentNote = "";
 	}
 
 	/*
@@ -396,13 +467,62 @@ public class NoteBookWindow extends Application {
 		grid.setHgap(10);
 		grid.setVgap(10);
 		grid.setPadding(new Insets(10, 10, 10, 10));
-		textAreaNote.setEditable(false);
+		
+		// Input Text Area
+		textAreaNote.setEditable(true);
 		textAreaNote.setMaxSize(450, 400);
 		textAreaNote.setWrapText(true);
 		textAreaNote.setPrefWidth(450);
 		textAreaNote.setPrefHeight(400);
+		
+		ImageView iconSave = new ImageView(new Image(new File("icons/save.png").toURI().toString()));
+		iconSave.setFitWidth(18);
+		iconSave.setFitHeight(18);
+		iconSave.setPreserveRatio(true);
+		
+		ImageView iconDelete= new ImageView(new Image(new File("icons/delete.png").toURI().toString()));
+		iconDelete.setFitWidth(18);
+		iconDelete.setFitHeight(18);
+		iconDelete.setPreserveRatio(true);
+		
+		Button buttonSaveNote = new Button("Save Note");
+		buttonSaveNote.setPrefSize(100, 20);
+		buttonSaveNote.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				// show warning message if either folder or note is not selected
+				if(currentFolder == DEFAULT_SELECTED_FOLDER || currentNote.isEmpty()) {
+					Alert alert = new Alert(AlertType.WARNING);
+					alert.setTitle("Warning");
+					alert.setContentText(String.format("Please select a folder and a note"));
+					alert.showAndWait().ifPresent(rs -> {
+						if (rs == ButtonType.OK) {
+							System.out.println("Pressed OK.");
+						}
+					});	
+				}
+				else {
+					String newNoteContent = textAreaNote.getText();
+					System.out.println("Saving note " + newNoteContent);
+					TextNote textNote = (TextNote) noteBook.getFolder(currentFolder).getNote(currentNote);
+					textNote.setContent(newNoteContent);
+				}
+			}			
+		});
+		
+		Button buttonDeleteNote = new Button("Delete Note");
+		buttonDeleteNote.setPrefSize(100, 20);
+		
+		HBox hbox = new HBox();
+		hbox.setSpacing(8);
+		hbox.getChildren().add(iconSave);
+		hbox.getChildren().add(buttonSaveNote);
+		hbox.getChildren().add(iconDelete);
+		hbox.getChildren().add(buttonDeleteNote);
+		
 		// 0 0 is the position in the grid
-		grid.add(textAreaNote, 0, 0);
+		grid.add(hbox, 0, 0);
+		grid.add(textAreaNote, 0, 1);
 
 		return grid;
 	}
@@ -426,6 +546,24 @@ public class NoteBookWindow extends Application {
 		nb.createTextNote("Holiday", "Christmas", "Possible destinations : Home, New York or Rome");
 		noteBook = nb;
 
+	}
+	
+	private static String getStringFromInputDialog(String title, String header, String content, String defaultValue) {
+		TextInputDialog dialog = new TextInputDialog(defaultValue);
+		dialog.setTitle(title);
+		dialog.setHeaderText(header);
+		dialog.setContentText(content);
+		
+		// Traditional way to get the response value.
+		Optional<String> result = dialog.showAndWait();
+
+		// break if no value found
+		if (! result.isPresent()) {
+			return null;
+		}
+		
+		String input = result.get();
+		return input;
 	}
 	
 	private void loadNoteBook(File file) {

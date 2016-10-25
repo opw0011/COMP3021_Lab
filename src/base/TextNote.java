@@ -69,6 +69,10 @@ public class TextNote extends Note {
 	public String getContent() {
 		return content;
 	}
+	
+	public void setContent(String content) {
+		this.content = content;
+	}
 
 	//Lab6, buggy
 	public Character countLetters(){
