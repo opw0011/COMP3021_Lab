@@ -12,6 +12,7 @@ import java.util.HashMap;
 
 public class TextNote extends Note {
 	private String content;
+	private static final long serialVersionUID = 1L;
 	
 	public TextNote(String title) {
 		super(title);
