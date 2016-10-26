@@ -297,18 +297,11 @@ public class NoteBookWindow extends Application {
 		foldersComboBox.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Object>() {
 			@Override
 			public void changed(ObservableValue ov, Object t, Object t1) {
-				if(t1 == null) return;	// to prevent null pointer exception when the list are clear
+				if(t1 == null || t1 == DEFAULT_SELECTED_FOLDER ) return;	// to prevent null pointer exception when the list are clear
 				currentFolder = t1.toString();	// this contains the name of the folder selected
 				// TODO update listview
 				System.out.println(currentFolder);
-				updateListView(noteBook.getFolder(currentFolder).getNotes());				
-//				for(Folder folder : noteBook.getFolders()) {
-//					// get the current folder
-//					if(folder.getName().equals(currentFolder)) {
-//						updateListView(folder.getNotes());
-//						break;
-//					}			
-//				}			
+				updateListView(noteBook.getFolder(currentFolder).getNotes());					
 			}
 
 		});
@@ -334,20 +327,6 @@ public class NoteBookWindow extends Application {
 					}
 				}
 				textAreaNote.setText(content);
-				
-//				for(Folder folder : noteBook.getFolders()) {
-//					// get the current folder
-//					if(folder.getName().equals(currentFolder)) {
-//						// get all the note titles
-//						for(Note note : folder.getNotes()) {
-//							if(note instanceof TextNote && note.getTitle().equals(title)) {
-//								content = ((TextNote) note).getContent();
-//							}
-//						}
-//						break;
-//					}			
-//				}
-//				textAreaNote.setText(content);
 
 			}
 		});
@@ -533,6 +512,14 @@ public class NoteBookWindow extends Application {
 				}
 				else {
 					// TODO: confirm before delete
+					Alert alert = new Alert(AlertType.CONFIRMATION);
+					alert.setTitle("Success");
+					alert.setContentText(String.format("Your note has been successfully removed!"));
+					alert.showAndWait().ifPresent(rs -> {
+						if (rs == ButtonType.OK) {
+							System.out.println("Pressed OK.");
+						}
+					});
 					
 					String newNoteContent = textAreaNote.getText();
 					System.out.println("Deleting note " + newNoteContent);
